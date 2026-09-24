@@ -1,0 +1,26 @@
+name: Build Piriya APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -q ./*.zip -d proj
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Fetch sherpa-onnx
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: cd proj && bash fetch-sherpa.sh
+      - run: cd proj && gradle assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Piriya-debug-apk
+          path: proj/app/build/outputs/apk/debug/*.apk
